@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Almoxarifado</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Avisos sobre o armazenamento dos dados -->
+  <div id="aviso-dados" class="aviso-dados" role="alert" hidden>
+    <ul id="aviso-dados-lista" class="aviso-dados-lista"></ul>
+    <button type="button" id="aviso-dados-fechar" class="botao-tabela">Dispensar</button>
+  </div>
+
+  <!-- Tela de login -->
+  <section id="tela-login" class="tela-login">
+    <form id="form-login" class="cartao-login" novalidate>
+      <h1>Almoxarifado</h1>
+      <p class="subtitulo">Acesse o sistema com suas credenciais</p>
+
+      <label for="campo-usuario">Usuário</label>
+      <input type="text" id="campo-usuario" autocomplete="username" required>
+
+      <label for="campo-senha">Senha</label>
+      <input type="password" id="campo-senha" autocomplete="current-password" required>
+
+      <p id="mensagem-erro" class="mensagem-erro" role="alert" hidden></p>
+
+      <button type="submit" class="botao">Entrar</button>
+    </form>
+  </section>
+
+  <!-- Aplicação (visível somente após autenticação) -->
+  <section id="tela-app" class="tela-app" hidden>
+    <header class="cabecalho">
+      <div class="cabecalho-marca">
+        <button type="button" id="botao-menu" class="botao-menu" aria-controls="menu" aria-expanded="false">&#9776; Menu</button>
+        <span class="cabecalho-titulo">Almoxarifado</span>
+      </div>
+      <div class="cabecalho-usuario">
+        <button type="button" id="indicador-alertas" class="indicador-alertas" hidden></button>
+        <span id="info-usuario"></span>
+        <span id="info-perfil" class="selo-perfil"></span>
+        <button type="button" id="botao-logout" class="botao botao-secundario">Sair</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav id="menu" class="menu" aria-label="Menu principal"></nav>
+
+      <main class="conteudo">
+        <h2 id="boas-vindas"></h2>
+
+        <!-- Dashboard -->
+        <section id="painel-inicio">
+          <p>Perfil autenticado: <strong id="texto-perfil"></strong></p>
+
+          <h3>Resumo do almoxarifado</h3>
+          <div class="cartoes-resumo">
+            <div class="cartao-resumo">
+              <span class="cartao-rotulo">Produtos cadastrados</span>
+              <span class="cartao-valor" id="valor-produtos">0</span>
+            </div>
+            <div class="cartao-resumo">
+              <span class="cartao-rotulo">Itens em estoque</span>
+              <span class="cartao-valor" id="valor-itens">0</span>
+            </div>
+            <div class="cartao-resumo cartao-alerta">
+              <span class="cartao-rotulo">Produtos com estoque baixo</span>
+              <span class="cartao-valor" id="valor-baixo">0</span>
+            </div>
+            <div class="cartao-resumo cartao-critico">
+              <span class="cartao-rotulo">Produtos sem estoque</span>
+              <span class="cartao-valor" id="valor-zerado">0</span>
+            </div>
+          </div>
+
+          <!-- Alertas de estoque -->
+          <section id="alertas-estoque" class="bloco bloco-alertas" aria-label="Alertas de estoque">
+            <h3>Alertas de estoque</h3>
+            <p id="alertas-resumo" class="texto-apoio"></p>
+            <ul id="alertas-lista" class="lista-alertas"></ul>
+          </section>
+
+          <div class="dashboard-colunas">
+            <section class="bloco">
+              <h3>Movimentações recentes</h3>
+              <p id="movimentacoes-resumo" class="texto-apoio"></p>
+              <p id="movimentacoes-vazio" class="texto-apoio">Nenhuma movimentação registrada até o momento.</p>
+              <div id="tabela-movimentacoes-wrapper" class="tabela-wrapper" hidden>
+                <table class="tabela">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Tipo</th>
+                      <th>Produto</th>
+                      <th>Quantidade</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabela-movimentacoes"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="bloco">
+              <h3>Acesso rápido</h3>
+              <div id="acesso-rapido" class="acesso-rapido"></div>
+            </section>
+          </div>
+
+          <h3>Permissões do seu perfil</h3>
+          <ul id="lista-permissoes" class="lista-permissoes"></ul>
+        </section>
+
+        <!-- Cadastro de produtos -->
+        <section id="painel-cadastro-produto" hidden>
+          <h3>Cadastrar produto</h3>
+          <p class="texto-apoio">Os campos marcados com * são obrigatórios.</p>
+
+          <form id="form-produto" class="formulario" novalidate>
+            <div class="campo">
+              <label for="campo-codigo">Código do produto *</label>
+              <input type="text" id="campo-codigo" maxlength="30" autocomplete="off">
+              <span class="erro-campo" id="erro-codigo" role="alert"></span>
+            </div>
+
+            <div class="campo">
+              <label for="campo-nome">Nome *</label>
+              <input type="text" id="campo-nome" maxlength="100" autocomplete="off">
+              <span class="erro-campo" id="erro-nome" role="alert"></span>
+            </div>
+
+            <div class="campo campo-largo">
+              <label for="campo-descricao">Descrição</label>
+              <textarea id="campo-descricao" rows="3" maxlength="300"></textarea>
+              <span class="erro-campo" id="erro-descricao" role="alert"></span>
+            </div>
+
+            <div class="campo">
+              <label for="campo-categoria">Categoria *</label>
+              <input type="text" id="campo-categoria" list="lista-categorias" maxlength="60" autocomplete="off">
+              <datalist id="lista-categorias"></datalist>
+              <span class="erro-campo" id="erro-categoria" role="alert"></span>
+            </div>
+
+            <div class="campo">
+              <label for="campo-localizacao">Localização no almoxarifado *</label>
+              <input type="text" id="campo-localizacao" maxlength="60" autocomplete="off">
+              <span class="erro-campo" id="erro-localizacao" role="alert"></span>
+            </div>
+
+            <div class="campo">
+              <label for="campo-quantidade">Quantidade inicial *</label>
+              <input type="number" id="campo-quantidade" min="0" step="1" inputmode="numeric">
+              <span class="erro-campo" id="erro-quantidade" role="alert"></span>
+            </div>
+
+            <div class="campo">
+              <label for="campo-minimo">Estoque mínimo *</label>
+              <input type="number" id="campo-minimo" min="0" step="1" inputmode="numeric">
+              <span class="erro-campo" id="erro-minimo" role="alert"></span>
+            </div>
+
+            <p id="produto-mensagem" class="mensagem-formulario campo-largo" role="status" hidden></p>
+            <p id="produto-alerta" class="mensagem-formulario mensagem-alerta campo-largo" role="alert" hidden></p>
+
+            <div class="botoes-formulario campo-largo">
+              <button type="submit" class="botao">Cadastrar produto</button>
+              <button type="button" id="botao-limpar-produto" class="botao botao-secundario">Limpar</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Gerenciamento de produtos e consulta de estoque -->
+        <section id="painel-produtos" hidden>
+          <h3 id="produtos-titulo">Produtos cadastrados</h3>
+          <p id="produtos-apoio" class="texto-apoio"></p>
+          <p id="produtos-mensagem" class="mensagem-formulario" role="status" hidden></p>
+          <p id="produtos-alerta" class="mensagem-formulario mensagem-alerta" role="alert" hidden></p>
+
+          <!-- Lista -->
+          <div id="visao-lista">
+            <p id="produtos-vazio" class="texto-apoio">Nenhum produto cadastrado até o momento.</p>
+
+            <!-- Pesquisa, filtros e ordenação -->
+            <section id="filtros-produtos" class="filtros bloco" aria-label="Pesquisa, filtros e ordenação" hidden>
+              <div class="filtros-grade">
+                <div class="campo">
+                  <label for="filtro-nome">Pesquisar por nome</label>
+                  <input type="search" id="filtro-nome" placeholder="Digite o nome" autocomplete="off">
+                </div>
+
+                <div class="campo">
+                  <label for="filtro-codigo">Pesquisar por código</label>
+                  <input type="search" id="filtro-codigo" placeholder="Digite o código" autocomplete="off">
+                </div>
+
+                <div class="campo">
+                  <label for="filtro-categoria">Categoria</label>
+                  <select id="filtro-categoria"></select>
+                </div>
+
+                <div class="campo">
+                  <label for="filtro-situacao">Situação do estoque</label>
+                  <select id="filtro-situacao"></select>
+                </div>
+
+                <div class="campo">
+                  <label for="filtro-ordenacao">Ordenar por</label>
+                  <select id="filtro-ordenacao"></select>
+                </div>
+
+                <div class="campo filtros-acoes">
+                  <button type="button" id="filtro-limpar" class="botao botao-secundario">Limpar filtros</button>
+                </div>
+              </div>
+            </section>
+
+            <p id="produtos-resumo" class="texto-apoio" role="status" hidden></p>
+            <p id="produtos-sem-resultado" class="texto-apoio" hidden>Nenhum produto encontrado com os critérios informados.</p>
+
+            <div id="produtos-tabela-wrapper" class="tabela-wrapper bloco" hidden>
+              <table class="tabela">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Quantidade</th>
+                    <th>Estoque mínimo</th>
+                    <th>Localização</th>
+                    <th>Situação</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="produtos-corpo"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Detalhes -->
+          <div id="visao-detalhe" class="bloco" hidden>
+            <h3 id="detalhe-titulo"></h3>
+            <p id="detalhe-alerta" class="mensagem-formulario mensagem-alerta" role="alert" hidden></p>
+            <dl id="detalhe-lista" class="detalhes"></dl>
+            <div class="botoes-formulario">
+              <button type="button" id="detalhe-editar" class="botao">Editar</button>
+              <button type="button" id="detalhe-excluir" class="botao botao-perigo">Excluir</button>
+              <button type="button" id="detalhe-voltar" class="botao botao-secundario">Voltar à lista</button>
+            </div>
+          </div>
+
+          <!-- Edição -->
+          <div id="visao-edicao" hidden>
+            <form id="form-edicao-produto" class="formulario" novalidate>
+              <div class="campo campo-largo">
+                <h3 class="titulo-formulario">Editar produto</h3>
+                <span class="texto-apoio">Os campos marcados com * são obrigatórios.</span>
+              </div>
+
+              <div class="campo">
+                <label for="edicao-codigo">Código do produto *</label>
+                <input type="text" id="edicao-codigo" maxlength="30" autocomplete="off">
+                <span class="erro-campo" id="erro-edicao-codigo" role="alert"></span>
+              </div>
+
+              <div class="campo">
+                <label for="edicao-nome">Nome *</label>
+                <input type="text" id="edicao-nome" maxlength="100" autocomplete="off">
+                <span class="erro-campo" id="erro-edicao-nome" role="alert"></span>
+              </div>
+
+              <div class="campo campo-largo">
+                <label for="edicao-descricao">Descrição</label>
+                <textarea id="edicao-descricao" rows="3" maxlength="300"></textarea>
+                <span class="erro-campo" id="erro-edicao-descricao" role="alert"></span>
+              </div>
+
+              <div class="campo">
+                <label for="edicao-categoria">Categoria *</label>
+                <input type="text" id="edicao-categoria" list="lista-categorias" maxlength="60" autocomplete="off">
+                <span class="erro-campo" id="erro-edicao-categoria" role="alert"></span>
+              </div>
+
+              <div class="campo">
+                <label for="edicao-localizacao">Localização no almoxarifado *</label>
+                <input type="text" id="edicao-localizacao" maxlength="60" autocomplete="off">
+                <span class="erro-campo" id="erro-edicao-localizacao" role="alert"></span>
+              </div>
+
+              <div class="campo">
+                <label for="edicao-quantidade">Quantidade em estoque *</label>
+                <input type="number" id="edicao-quantidade" min="0" step="1" inputmode="numeric">
+                <span class="erro-campo" id="erro-edicao-quantidade" role="alert"></span>
+              </div>
+
+              <div class="campo">
+                <label for="edicao-minimo">Estoque mínimo *</label>
+                <input type="number" id="edicao-minimo" min="0" step="1" inputmode="numeric">
+                <span class="erro-campo" id="erro-edicao-minimo" role="alert"></span>
+              </div>
+
+              <div class="botoes-formulario campo-largo">
+                <button type="submit" class="botao">Salvar alterações</button>
+                <button type="button" id="botao-cancelar-edicao" class="botao botao-secundario">Cancelar</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Confirmação de exclusão -->
+          <div id="confirmacao-exclusao" class="sobreposicao" role="dialog" aria-modal="true" aria-labelledby="confirmacao-titulo" hidden>
+            <div class="caixa-confirmacao">
+              <h3 id="confirmacao-titulo">Excluir produto</h3>
+              <p id="confirmacao-texto"></p>
+              <div class="botoes-formulario">
+                <button type="button" id="botao-confirmar-exclusao" class="botao botao-perigo">Excluir</button>
+                <button type="button" id="botao-cancelar-exclusao" class="botao botao-secundario">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Movimentações de estoque (entrada e saída) -->
+        <section id="painel-movimentacao" hidden>
+          <h3 id="mov-titulo"></h3>
+          <p id="mov-apoio" class="texto-apoio"></p>
+          <p id="mov-mensagem" class="mensagem-formulario" role="status" hidden></p>
+          <p id="mov-alerta" class="mensagem-formulario mensagem-alerta" role="alert" hidden></p>
+
+          <form id="form-movimentacao" class="formulario formulario-movimentacao" novalidate>
+            <div class="campo">
+              <label for="mov-produto">Produto *</label>
+              <select id="mov-produto"></select>
+              <span class="erro-campo" id="erro-mov-produto" role="alert"></span>
+            </div>
+
+            <p id="mov-disponivel" class="disponivel-info"></p>
+
+            <div class="campo">
+              <label for="mov-quantidade">Quantidade *</label>
+              <input type="number" id="mov-quantidade" min="1" step="1" inputmode="numeric">
+              <span class="erro-campo" id="erro-mov-quantidade" role="alert"></span>
+            </div>
+
+            <div class="botoes-formulario">
+              <button type="submit" id="mov-botao" class="botao">Registrar</button>
+              <button type="button" id="mov-limpar" class="botao botao-secundario">Limpar</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Histórico de movimentações -->
+        <section id="painel-historico" hidden>
+          <h3>Histórico de movimentações</h3>
+          <p class="texto-apoio">Consulte as entradas e saídas registradas no estoque.</p>
+          <p id="historico-vazio" class="texto-apoio">Nenhuma movimentação registrada até o momento.</p>
+
+          <!-- Filtros do histórico -->
+          <section id="filtros-historico" class="filtros bloco" aria-label="Filtros do histórico" hidden>
+            <div class="filtros-grade">
+              <div class="campo">
+                <label for="hist-produto">Produto (nome ou código)</label>
+                <input type="search" id="hist-produto" placeholder="Digite o nome ou código" autocomplete="off">
+              </div>
+
+              <div class="campo">
+                <label for="hist-tipo">Tipo</label>
+                <select id="hist-tipo">
+                  <option value="">Todos os tipos</option>
+                  <option value="entrada">Entrada</option>
+                  <option value="saida">Saída</option>
+                </select>
+              </div>
+
+              <div class="campo">
+                <label for="hist-usuario">Usuário responsável</label>
+                <select id="hist-usuario"></select>
+              </div>
+
+              <div class="campo">
+                <label for="hist-data-inicial">Data inicial</label>
+                <input type="date" id="hist-data-inicial">
+              </div>
+
+              <div class="campo">
+                <label for="hist-data-final">Data final</label>
+                <input type="date" id="hist-data-final">
+              </div>
+
+              <div class="campo">
+                <label for="hist-ordenacao">Ordenar por</label>
+                <select id="hist-ordenacao">
+                  <option value="recentes">Mais recentes primeiro</option>
+                  <option value="antigas">Mais antigas primeiro</option>
+                </select>
+              </div>
+
+              <div class="campo filtros-acoes">
+                <button type="button" id="hist-limpar" class="botao botao-secundario">Limpar filtros</button>
+              </div>
+            </div>
+          </section>
+
+          <p id="historico-aviso" class="mensagem-formulario mensagem-erro" role="alert" hidden></p>
+          <p id="historico-resumo" class="texto-apoio" role="status" hidden></p>
+          <p id="historico-sem-resultado" class="texto-apoio" hidden>Nenhuma movimentação encontrada com os critérios informados.</p>
+
+          <div id="historico-tabela-wrapper" class="tabela-wrapper bloco" hidden>
+            <table class="tabela">
+              <thead>
+                <tr>
+                  <th>Data e hora</th>
+                  <th>Tipo</th>
+                  <th>Produto</th>
+                  <th>Quantidade</th>
+                  <th>Usuário responsável</th>
+                </tr>
+              </thead>
+              <tbody id="historico-corpo"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Painel de mensagens de acesso -->
+        <section id="painel-modulo" hidden>
+          <h3 id="modulo-titulo"></h3>
+          <p id="modulo-texto"></p>
+        </section>
+      </main>
+    </div>
+  </section>
+
+  <script src="js/permissoes.js"></script>
+  <script src="js/dados.js"></script>
+  <script src="js/estoque.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/produtos.js"></script>
+  <script src="js/filtros-produtos.js"></script>
+  <script src="js/gestao-produtos.js"></script>
+  <script src="js/movimentacoes.js"></script>
+  <script src="js/historico.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
